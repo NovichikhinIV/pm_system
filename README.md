@@ -27,5 +27,6 @@ DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRE
 # Микросервисы
 
 frontend 
+
 main - микросервис с основной базой данных
 
