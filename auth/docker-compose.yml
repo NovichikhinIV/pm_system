@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  auth:
+    container_name: auth
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      sh -c 'python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8001'
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+    depends_on:
+      - db_auth
+    env_file: auth/.env
+    networks:
+      - backend
+      - backend_auth_network
+
+  db_auth:
+    container_name: db_auth
+    image: postgres
+    restart: always
+    volumes:
+      - ./.database/postgres/data:/var/lib/postgresql/data
+    ports:
+      - "5433:5433"
+    command: -p 5433
+    env_file: auth/.env
+    networks:
+      - backend_auth_network
+
+networks:
+  backend_auth_network:
+  backend:
+    external: true

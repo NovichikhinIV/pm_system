@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import { useNavigate, useParams} from 'react-router-dom'
 import DeveloperAPI from '../../API/DeveloperAPI';
 import DevelopmentTeamAPI from '../../API/DevelopmentTeamAPI';
 import { useFetching } from '../../hooks/useFetching';
 import {useForm} from 'react-hook-form'
+import AuthContext from '../../context/AuthContext'
 
 const DeveloperId = () => {
   const params = useParams()
   const navigate = useNavigate();
+  let {authTokens} = useContext(AuthContext)
+
   const EMAIL_REGEXP = /^(([^<>()[\].,;:\s@"]+(\.[^<>()[\].,;:\s@"]+)*)|(".+"))@(([^<>()[\].,;:\s@"]+\.)+[^<>()[\].,;:\s@"]{2,})$/iu;
 
 
@@ -28,7 +31,7 @@ const DeveloperId = () => {
 
 
   let [fetchDeveloperById, isDeveloperLoading, errorDeveloper] = useFetching(async (id) => {
-    const reponse = await DeveloperAPI.retrieve(params.id);
+    const reponse = await DeveloperAPI.retrieve(params.id, authTokens.access);
     if(reponse.status === 404) {
       setErrorLoad('Page not found')
     }
@@ -37,7 +40,7 @@ const DeveloperId = () => {
   })
 
   let [fetchDevelopmentTeams, isTeamsLoading, errorTeams] = useFetching(async () => {
-    const reponse = await DevelopmentTeamAPI.list();
+    const reponse = await DevelopmentTeamAPI.list(authTokens.access);
     let data = await reponse.json();
     setDevelopmentTeams(data)
   })
@@ -74,19 +77,19 @@ const DeveloperId = () => {
 
   const createHandler = async (data, e) => {
     e.preventDefault()
-    const response = await DeveloperAPI.create(Developer);
+    const response = await DeveloperAPI.create(Developer, authTokens.access);
     await navigate(-1)
   }
 
   const updateHandler = async (data, e) => {
     e.preventDefault()
-    const response = await DeveloperAPI.update(Developer.id, Developer);
+    const response = await DeveloperAPI.update(Developer.id, Developer, authTokens.access);
     await navigate(-1)
   }
 
   const destroyHandler = async (e) => {
     e.preventDefault()
-    const response = await DeveloperAPI.destroy(Developer.id);
+    const response = await DeveloperAPI.destroy(Developer.id, authTokens.access);
     if(response.status === 500) {
         setProtectedError('Удалите связанные с этой записью элементы')
     }
@@ -109,7 +112,7 @@ const DeveloperId = () => {
           <button onClick={() => navigate(-1)} className={["button", "blueButton"].join(' ')}>Назад</button>
 
           <form className="form">
-              <h2 className="form__title">Developer</h2>
+              <h2 className="form__title">Разработчик</h2>
               <div className="form__group">
                   <div className="form__item">
                       <div>

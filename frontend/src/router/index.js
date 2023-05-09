@@ -12,12 +12,14 @@ import TaskId from "../pages/ById/TaskId";
 import SubtaskId from "../pages/ById/SubtaskId";
 import ExpensesId from "../pages/ById/ExpensesId";
 
+import Main from "../pages/Main";
 import Login from "../pages/Login";
+import Registration from "../pages/Registration";
 
 
 export const privateRoutes = [
     {path: '/ItProject', component: ItProject},
-    {path: '/DevelopmentTeam', component: DevelopmentTeam},
+    // {path: '/DevelopmentTeam', component: DevelopmentTeam},
     {path: '/Developer', component: Developer},
     {path: '/Task', component: Task},
     {path: '/Subtask', component: Subtask},
@@ -33,5 +35,7 @@ export const privateRoutes = [
 
 
 export const publicRoutes = [
+    {path: '/', component: Main},
     {path: '/login', component: Login},
+    {path: '/registration', component: Registration},
 ]

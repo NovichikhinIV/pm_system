@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import { useNavigate, useParams} from 'react-router-dom'
 import TaskAPI from '../../API/TaskAPI';
 import DeveloperAPI from '../../API/DeveloperAPI';
 import { useFetching } from '../../hooks/useFetching';
 import {useForm} from 'react-hook-form'
+import AuthContext from '../../context/AuthContext'
 
 const ItProjectId = () => {
   const params = useParams()
   const navigate = useNavigate();
+  let {authTokens} = useContext(AuthContext)
 
 
   const {
@@ -27,7 +29,7 @@ const ItProjectId = () => {
 
 
   let [fetchTaskById, isTaskLoading, errorTask] = useFetching(async (id) => {
-    const reponse = await TaskAPI.retrieve(params.id);
+    const reponse = await TaskAPI.retrieve(params.id, authTokens.access);
     if(reponse.status === 404) {
       setErrorLoad('Page not found')
     }
@@ -36,7 +38,7 @@ const ItProjectId = () => {
   })
 
   let [fetchDevelopers, isDevelopersLoading, errorDevelopers] = useFetching(async () => {
-    const reponse = await DeveloperAPI.list();
+    const reponse = await DeveloperAPI.list(authTokens.access);
     let data = await reponse.json();
     setDevelopers(data)
   })
@@ -73,19 +75,19 @@ const ItProjectId = () => {
 
   const createHandler = async (data, e) => {
     e.preventDefault()
-    const response = await TaskAPI.create(Task);
+    const response = await TaskAPI.create(Task, authTokens.access);
     await navigate(-1)
   }
 
   const updateHandler = async (data, e) => {
     e.preventDefault()
-    const response = await TaskAPI.update(Task.id, Task);
+    const response = await TaskAPI.update(Task.id, Task, authTokens.access);
     await navigate(-1)
   }
 
   const destroyHandler = async (e) => {
     e.preventDefault()
-    const response = await TaskAPI.destroy(Task.id);
+    const response = await TaskAPI.destroy(Task.id, authTokens.access);
     if(response.status === 500) {
         setProtectedError('Удалите связанные с этой записью элементы')
     }
@@ -108,7 +110,7 @@ const ItProjectId = () => {
           <button onClick={() => navigate(-1)} className={["button", "blueButton"].join(' ')}>Назад</button>
 
           <form className="form">
-              <h2 className="form__title">Task</h2>
+              <h2 className="form__title">Задача</h2>
               <div className="form__group">
                   <div className="form__item">
                       <div>

@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate, useParams} from 'react-router-dom'
+import React, { useEffect, useState, useContext } from 'react'
+import { Link, useNavigate, useParams} from 'react-router-dom'
 import ItProjectAPI from '../../API/ItProjectAPI';
 import DevelopmentTeamAPI from '../../API/DevelopmentTeamAPI';
 import { useFetching } from '../../hooks/useFetching';
 import {useForm} from 'react-hook-form'
+import AuthContext from '../../context/AuthContext'
 
 const ItProjectId = () => {
   const params = useParams()
   const navigate = useNavigate();
+  let {authTokens} = useContext(AuthContext)
 
 
   const {
@@ -27,7 +29,7 @@ const ItProjectId = () => {
 
 
   let [fetchItProjectById, isProjectLoading, errorProject] = useFetching(async (id) => {
-    const reponse = await ItProjectAPI.retrieve(params.id);
+    const reponse = await ItProjectAPI.retrieve(params.id, authTokens.access);
     if(reponse.status === 404) {
       setErrorLoad('Page not found')
     }
@@ -36,7 +38,7 @@ const ItProjectId = () => {
   })
 
   let [fetchDevelopmentTeams, isTeamsLoading, errorTeams] = useFetching(async () => {
-    const reponse = await DevelopmentTeamAPI.list();
+    const reponse = await DevelopmentTeamAPI.list(authTokens.access);
     let data = await reponse.json();
     setDevelopmentTeams(data)
   })
@@ -73,19 +75,19 @@ const ItProjectId = () => {
 
   const createHandler = async (data, e) => {
     e.preventDefault()
-    const response = await ItProjectAPI.create(ItProject);
+    const response = await ItProjectAPI.create(ItProject, authTokens.access);
     await navigate(-1)
   }
 
   const updateHandler = async (data, e) => {
     e.preventDefault()
-    const response = await ItProjectAPI.update(ItProject.id, ItProject);
+    const response = await ItProjectAPI.update(ItProject.id, ItProject, authTokens.access);
     await navigate(-1)
   }
 
   const destroyHandler = async (e) => {
     e.preventDefault()
-    const response = await ItProjectAPI.destroy(ItProject.id);
+    const response = await ItProjectAPI.destroy(ItProject.id, authTokens.access);
     if(response.status === 500) {
       setProtectedError('Удалите связанные с этой записью элементы')
     }
@@ -108,7 +110,7 @@ const ItProjectId = () => {
           <button onClick={() => navigate(-1)} className={["button", "blueButton"].join(' ')}>Назад</button>
 
           <form className="form">
-              <h2 className="form__title">ItProject</h2>
+              <h2 className="form__title">ИТ-проекты</h2>
               <div className="form__group">
                   <div className="form__item">
                       <div>
@@ -187,7 +189,13 @@ const ItProjectId = () => {
                 {ProtectedError}
               </div>
           </form>
-
+          
+          <Link to={`/ItProject/${params.id}/report`}>
+            <button className={["button", "greenButton"].join(' ')}>
+              Составить отчет по проекту
+            </button>
+          </Link>
+          
 
           </>
           }

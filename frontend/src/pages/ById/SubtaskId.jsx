@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import { useNavigate, useParams} from 'react-router-dom'
 import SubtaskAPI from '../../API/SubtaskAPI';
 import TaskAPI from '../../API/TaskAPI';
 import { useFetching } from '../../hooks/useFetching';
 import {useForm} from 'react-hook-form'
+import AuthContext from '../../context/AuthContext'
 
 const ItProjectId = () => {
   const params = useParams()
   const navigate = useNavigate();
+  let {authTokens} = useContext(AuthContext)
 
 
   const {
@@ -26,7 +28,7 @@ const ItProjectId = () => {
 
 
   let [fetchSubtaskById, isSubtaskLoading, errorSubtask] = useFetching(async (id) => {
-    const reponse = await SubtaskAPI.retrieve(params.id);
+    const reponse = await SubtaskAPI.retrieve(params.id, authTokens.access);
     if(reponse.status === 404) {
       setErrorLoad('Page not found')
     }
@@ -35,7 +37,7 @@ const ItProjectId = () => {
   })
 
   let [fetchTasks, isTasksLoading, errorTasks] = useFetching(async () => {
-    const reponse = await TaskAPI.list();
+    const reponse = await TaskAPI.list(authTokens.access);
     let data = await reponse.json();
     setTasks(data)
   })
@@ -72,19 +74,19 @@ const ItProjectId = () => {
 
   const createHandler = async (data, e) => {
     e.preventDefault()
-    const response = await SubtaskAPI.create(Subtask);
+    const response = await SubtaskAPI.create(Subtask, authTokens.access);
     await navigate(-1)
   }
 
   const updateHandler = async (data, e) => {
     e.preventDefault()
-    const response = await SubtaskAPI.update(Subtask.id, Subtask);
+    const response = await SubtaskAPI.update(Subtask.id, Subtask, authTokens.access);
     await navigate(-1)
   }
 
   const destroyHandler = async (e) => {
     e.preventDefault()
-    const response = await SubtaskAPI.destroy(Subtask.id);
+    const response = await SubtaskAPI.destroy(Subtask.id, authTokens.access);
     await navigate(-1)
   }
 
@@ -102,7 +104,7 @@ const ItProjectId = () => {
           <button onClick={() => navigate(-1)} className={["button", "blueButton"].join(' ')}>Назад</button>
 
           <form className="form">
-              <h2 className="form__title">Task</h2>
+              <h2 className="form__title">Подзадача</h2>
               <div className="form__group">
                   <div className="form__item">
                       <div>

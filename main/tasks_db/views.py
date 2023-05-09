@@ -1,63 +1,403 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework.exceptions import AuthenticationFailed
 from django.shortcuts import get_object_or_404
+from django.db.models import ProtectedError
 
 from .models import ItProject, DevelopmentTeam, Developer, Task, Subtask, Expenses
-from .serializers import ItProjectSerializer, DevelopmentTeamSerializer, DeveloperSerializer, TaskSerializer, SubtaskSerializer, ExpensesSerializer
+from .serializers import ItProjectSerializer, DevelopmentTeamSerializer, DevelopmentTeamSerializerWithoutUser, DeveloperSerializer, TaskSerializer, SubtaskSerializer, ExpensesSerializer
+from .serializers import ItProjectSerializerLabels, DevelopmentTeamSerializerLabels, DevelopmentTeamSerializerWithoutUserLabels, DeveloperSerializerLabels, TaskSerializerLabels, SubtaskSerializerLabels, ExpensesSerializerLabels
+
+from .service.auth_service import Auth
+from .decorators import is_authorized
+from .helpers import extract_token
 
 
 
-class ItProjectViewSet(viewsets.ModelViewSet):
-    queryset = ItProject.objects.all()
-    serializer_class = ItProjectSerializer
+# 1
+class ItProjectViewSet(viewsets.ViewSet):
+    @is_authorized
+    def list(self, request):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
 
-class DevelopmentTeamViewSet(viewsets.ModelViewSet):
-    queryset = DevelopmentTeam.objects.all()
-    serializer_class = DevelopmentTeamSerializer
+        queryset = ItProject.objects.filter(team__user_id=user)
+        
+        serializer = ItProjectSerializerLabels(queryset, many=True)
+        return Response(serializer.data)
+
+    @is_authorized
+    def create(self, request):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = DevelopmentTeam.objects.filter(id=request.data['team']).filter(user_id=user).first()
+        # queryset = ItProject.objects.filter(team__user_id=user).first()
+        if not queryset:
+            raise AuthenticationFailed('Unauthenticated')
+        
+        serializer = ItProjectSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @is_authorized
+    def retrieve(self, request, pk=None):    
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = ItProject.objects.filter(id=pk, team__user_id=user)
+        
+        query = get_object_or_404(queryset, pk=pk)
+        serializer = ItProjectSerializer(query)
+        return Response(serializer.data)
+
+    @is_authorized
+    def update(self, request, pk=None):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = ItProject.objects.filter(id=pk, team__user_id=user).first()
+        
+        serializer = ItProjectSerializer(instance=queryset, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    @is_authorized
+    def destroy(self, request, pk=None):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = ItProject.objects.filter(id=pk, team__user_id=user).first()
+
+        try:
+            queryset.delete()
+        except ProtectedError:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)
     
-class DeveloperViewSet(viewsets.ModelViewSet):
-    queryset = Developer.objects.all()
-    serializer_class = DeveloperSerializer
     
-class TaskViewSet(viewsets.ModelViewSet):
-    queryset = Task.objects.all()
-    serializer_class = TaskSerializer
+# 2 
+class DevelopmentTeamViewSet(viewsets.ViewSet):
+    @is_authorized
+    def list(self, request):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+
+        queryset = DevelopmentTeam.objects.filter(user_id=user)
+
+        serializer = DevelopmentTeamSerializerWithoutUserLabels(queryset, many=True)
+        return Response(serializer.data)
+
+    @is_authorized
+    def create(self, request):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        if user != request.data['user_id']:
+            raise AuthenticationFailed('Unauthenticated')
+        
+        serializer = DevelopmentTeamSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @is_authorized
+    def retrieve(self, request, pk=None):    
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = DevelopmentTeam.objects.filter(id=pk, user_id=user)
+        
+        query = get_object_or_404(queryset, pk=pk)
+        serializer = DevelopmentTeamSerializer(query)
+        return Response(serializer.data)
+
+    @is_authorized
+    def update(self, request, pk=None):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = DevelopmentTeam.objects.filter(id=pk, user_id=user).first()
+        
+        serializer = DevelopmentTeamSerializer(instance=queryset, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    @is_authorized
+    def destroy(self, request, pk=None):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = DevelopmentTeam.objects.filter(id=pk, user_id=user).first()
+
+        try:
+            queryset.delete()
+        except ProtectedError:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)
+  
+  
+# 3
+class DeveloperViewSet(viewsets.ViewSet):
+    @is_authorized
+    def list(self, request):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+
+        queryset = Developer.objects.filter(team__user_id=user)
+
+        serializer = DeveloperSerializerLabels(queryset, many=True)
+        return Response(serializer.data)
+
+    @is_authorized
+    def create(self, request):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = DevelopmentTeam.objects.filter(id=request.data['team']).filter(user_id=user).first()
+        # queryset = Developer.objects.filter(team__user_id=user).first()
+        if not queryset:
+            raise AuthenticationFailed('Unauthenticated')
+        
+        serializer = DeveloperSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @is_authorized
+    def retrieve(self, request, pk=None):    
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Developer.objects.filter(id=pk, team__user_id=user)
+        
+        query = get_object_or_404(queryset, pk=pk)
+        serializer = DeveloperSerializer(query)
+        return Response(serializer.data)
+
+    @is_authorized
+    def update(self, request, pk=None):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Developer.objects.filter(id=pk, team__user_id=user).first()
+        
+        serializer = DeveloperSerializer(instance=queryset, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    @is_authorized
+    def destroy(self, request, pk=None):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Developer.objects.filter(id=pk, team__user_id=user).first()
+
+        try:
+            queryset.delete()
+        except ProtectedError:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+# 4
+class TaskViewSet(viewsets.ViewSet):
+    @is_authorized
+    def list(self, request):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+
+        queryset = Task.objects.filter(developer__team__user_id=user)
+
+        serializer = TaskSerializerLabels(queryset, many=True)
+        return Response(serializer.data)
+
+    @is_authorized
+    def create(self, request):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Developer.objects.filter(id=request.data['developer']).filter(team__user_id=user).first()
+        # queryset = Task.objects.filter(developer__team__user_id=user).first()
+        if not queryset:
+            raise AuthenticationFailed('Unauthenticated')
+        
+        serializer = TaskSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @is_authorized
+    def retrieve(self, request, pk=None):    
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Task.objects.filter(id=pk, developer__team__user_id=user)
+        
+        query = get_object_or_404(queryset, pk=pk)
+        serializer = TaskSerializer(query)
+        return Response(serializer.data)
+
+    @is_authorized
+    def update(self, request, pk=None):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Task.objects.filter(id=pk, developer__team__user_id=user).first()
+        
+        serializer = TaskSerializer(instance=queryset, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    @is_authorized
+    def destroy(self, request, pk=None):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Task.objects.filter(id=pk, developer__team__user_id=user).first()
+
+        try:
+            queryset.delete()
+        except ProtectedError:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(status=status.HTTP_204_NO_CONTENT) 
     
-class SubtaskViewSet(viewsets.ModelViewSet):
-    queryset = Subtask.objects.all()
-    serializer_class = SubtaskSerializer
-    
-class ExpensesViewSet(viewsets.ModelViewSet):
-    queryset = Expenses.objects.all()
-    serializer_class = ExpensesSerializer
-    
 
-# class ItProjectViewSet(viewsets.ViewSet):
-#     def list(self, request):
-#         queryset = ItProject.objects.all()
-#         serializer = ItProjectSerializer(queryset, many=True)
-#         return Response(serializer.data)
+# 5    
+class SubtaskViewSet(viewsets.ViewSet):
+    @is_authorized
+    def list(self, request):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
 
-#     def create(self, request):
-#         serializer = ItProjectSerializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+        queryset = Subtask.objects.filter(task__developer__team__user_id=user)
 
-#     def retrieve(self, request, pk=None):
-#         queryset = ItProject.objects.get(id=pk)
-#         query = get_object_or_404(queryset, pk=pk)
-#         serializer = ItProjectSerializer(query)
-#         return Response(serializer.data)
+        serializer = SubtaskSerializerLabels(queryset, many=True)
+        return Response(serializer.data)
 
-#     def update(self, request, pk=None):
-#         queryset = ItProject.objects.get(id=pk)
-#         serializer = ItProjectSerializer(instance=queryset, data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         serializer.save()
-#         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+    @is_authorized
+    def create(self, request):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Task.objects.filter(id=request.data['task']).filter(developer__team__user_id=user).first()
+        # queryset = Subtask.objects.filter(task__developer__team__user_id=user).first()  
+        if not queryset:
+            raise AuthenticationFailed('Unauthenticated')
+        
+        serializer = SubtaskSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-#     def destroy(self, request, pk=None):
-#         queryset = ItProject.objects.get(id=pk)
-#         queryset.delete()
-#         return Response(status=status.HTTP_204_NO_CONTENT)
+    @is_authorized
+    def retrieve(self, request, pk=None):    
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Subtask.objects.filter(id=pk, task__developer__team__user_id=user)
+        
+        query = get_object_or_404(queryset, pk=pk)
+        serializer = SubtaskSerializer(query)
+        return Response(serializer.data)
+
+    @is_authorized
+    def update(self, request, pk=None):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Subtask.objects.filter(id=pk, task__developer__team__user_id=user).first()
+        
+        serializer = SubtaskSerializer(instance=queryset, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    @is_authorized
+    def destroy(self, request, pk=None):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Subtask.objects.filter(id=pk, task__developer__team__user_id=user).first()
+
+        try:
+            queryset.delete()
+        except ProtectedError:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)   
+ 
+
+# 6 
+class ExpensesViewSet(viewsets.ViewSet):
+    @is_authorized
+    def list(self, request):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+
+        queryset = Expenses.objects.filter(project__team__user_id=user)
+
+        serializer = ExpensesSerializerLabels(queryset, many=True)
+        return Response(serializer.data)
+
+    @is_authorized
+    def create(self, request):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = ItProject.objects.filter(id=request.data['project']).filter(team__user_id=user).first()
+        # queryset = Expenses.objects.filter(project__team__user_id=user).first()
+        if not queryset:
+            raise AuthenticationFailed('Unauthenticated')
+        
+        serializer = ExpensesSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @is_authorized
+    def retrieve(self, request, pk=None):    
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Expenses.objects.filter(id=pk, project__team__user_id=user)
+        
+        query = get_object_or_404(queryset, pk=pk)
+        serializer = ExpensesSerializer(query)
+        return Response(serializer.data)
+
+    @is_authorized
+    def update(self, request, pk=None):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Expenses.objects.filter(id=pk, project__team__user_id=user).first()
+        
+        serializer = ExpensesSerializer(instance=queryset, data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+
+    @is_authorized
+    def destroy(self, request, pk=None):
+        token = extract_token(request.headers)
+        user = Auth().get_user(token).get('id')
+        
+        queryset = Expenses.objects.filter(id=pk, project__team__user_id=user).first()
+
+        try:
+            queryset.delete()
+        except ProtectedError:
+            return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(status=status.HTTP_204_NO_CONTENT) 

@@ -1,8 +1,8 @@
 version: '3.8'
 
 services:
-  backend:
-    container_name: backend
+  main:
+    container_name: main
     build:
       context: .
       dockerfile: Dockerfile
@@ -14,11 +14,14 @@ services:
     volumes:
       - .:/app
     depends_on:
-      - db
+      - db_main
     env_file: main/.env
+    networks:
+      - backend
+      - backend_main_network
 
-  db:
-    container_name: db
+  db_main:
+    container_name: db_main
     image: postgres
     restart: always
     volumes:
@@ -26,3 +29,13 @@ services:
     ports:
       - "5432:5432"
     env_file: main/.env
+    networks:
+      - backend_main_network
+
+
+
+networks:
+  backend_main_network:
+  backend:
+    driver: bridge
+    name: backend

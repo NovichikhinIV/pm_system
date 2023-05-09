@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  main:
+    container_name: main
+    build:
+      context: ./main
+      dockerfile: Dockerfile
+    command: >
+      sh -c 'python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000'
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./main/:/app/mainApp
+    depends_on:
+      - db_main
+    env_file: main/main/.env
+    networks:
+      - frontend
+      - backend
+      - backend_main_network
+
+  db_main:
+    container_name: db_main
+    image: postgres
+    restart: always
+    volumes:
+      - ./main/.database/postgres/data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    env_file: main/main/.env
+    networks:
+      - backend_main_network
+
+
+
+  auth:
+    container_name: auth
+    build:
+      context: ./auth
+      dockerfile: Dockerfile
+    command: >
+      sh -c 'python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8001'
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./auth/:/app/authApp
+    depends_on:
+      - db_auth
+    env_file: auth/auth/.env
+    networks:
+      - frontend
+      - backend
+      - backend_auth_network
+
+  db_auth:
+    container_name: db_auth
+    image: postgres
+    restart: always
+    volumes:
+      - ./auth/.database/postgres/data:/var/lib/postgresql/data
+    ports:
+      - "5433:5433"
+    command: -p 5433
+    env_file: auth/auth/.env
+    networks:
+      - backend_auth_network
+
+
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    command: >
+      sh -c 'npm start'
+    ports:
+      - "80:3000"
+    networks:
+      - frontend
+      - backend
+
+
+networks:
+  frontend:
+  backend:
+  backend_main_network:
+  backend_auth_network:

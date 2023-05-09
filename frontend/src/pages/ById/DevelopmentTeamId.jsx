@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import { useNavigate, useParams} from 'react-router-dom'
 import DevelopmentTeamAPI from '../../API/DevelopmentTeamAPI';
 import { useFetching } from '../../hooks/useFetching';
 import {useForm} from 'react-hook-form'
+import AuthContext from '../../context/AuthContext'
 
 const DevelopmentTeamId = () => {
   const params = useParams()
   const navigate = useNavigate();
+  let {authTokens, user} = useContext(AuthContext)
 
 
   const {
@@ -24,7 +26,7 @@ const DevelopmentTeamId = () => {
 
 
   let [fetchDevelopmentTeamById, isDevelopmentTeamLoading, errorDevelopmentTeam] = useFetching(async (id) => {
-    const reponse = await DevelopmentTeamAPI.retrieve(params.id);
+    const reponse = await DevelopmentTeamAPI.retrieve(params.id, authTokens.access);
     if(reponse.status === 404) {
       setErrorLoad('Page not found')
     }
@@ -48,7 +50,7 @@ const DevelopmentTeamId = () => {
   useEffect(() => {
     if(IsNew) {
       setIsLoading(false)
-      setDevelopmentTeam({about: '',})
+      setDevelopmentTeam({about: '', user_id: user.user_id})
     }
     else if(!isDevelopmentTeamLoading) {
       setIsLoading(false)
@@ -59,19 +61,19 @@ const DevelopmentTeamId = () => {
 
   const createHandler = async (data, e) => {
     e.preventDefault()
-    const response = await DevelopmentTeamAPI.create(DevelopmentTeam);
+    const response = await DevelopmentTeamAPI.create(DevelopmentTeam, authTokens.access);
     await navigate(-1)
   }
 
   const updateHandler = async (data, e) => {
     e.preventDefault()
-    const response = await DevelopmentTeamAPI.update(DevelopmentTeam.id, DevelopmentTeam);
+    const response = await DevelopmentTeamAPI.update(DevelopmentTeam.id, DevelopmentTeam, authTokens.access);
     await navigate(-1)
   }
 
   const destroyHandler = async (e) => {
     e.preventDefault()
-    const response = await DevelopmentTeamAPI.destroy(DevelopmentTeam.id);
+    const response = await DevelopmentTeamAPI.destroy(DevelopmentTeam.id, authTokens.access);
     if(response.status === 500) {
         setProtectedError('Удалите связанные с этой записью элементы')
     }
@@ -94,7 +96,7 @@ const DevelopmentTeamId = () => {
           <button onClick={() => navigate(-1)} className={["button", "blueButton"].join(' ')}>Назад</button>
 
           <form className="form">
-              <h2 className="form__title">DevelopmentTeam</h2>
+              <h2 className="form__title">Команда разработчиков</h2>
               <div className="form__group">
                   <div className="form__item">
                       <div>
@@ -102,7 +104,7 @@ const DevelopmentTeamId = () => {
                         <p>{errors.about.message.toString()}</p> :
                         <p></p>}
                       </div>
-                      <label htmlFor="about">О каманде</label>
+                      <label htmlFor="about">О команде</label>
                       <input type="text"
                           {...register("about", {
                             required: "Поле обязательно к заполнению",

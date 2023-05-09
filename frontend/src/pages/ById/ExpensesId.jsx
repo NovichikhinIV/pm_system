@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useContext } from 'react'
 import { useNavigate, useParams} from 'react-router-dom'
 import ExpensesAPI from '../../API/ExpensesAPI';
 import ItProjectAPI from '../../API/ItProjectAPI';
 import { useFetching } from '../../hooks/useFetching';
 import {useForm} from 'react-hook-form'
+import AuthContext from '../../context/AuthContext'
 
 const ExpensesId = () => {
   const params = useParams()
   const navigate = useNavigate();
+  let {authTokens} = useContext(AuthContext)
 
 
   const {
@@ -26,7 +28,7 @@ const ExpensesId = () => {
 
 
   let [fetchExpensesById, isExpensesLoading, errorExpenses] = useFetching(async (id) => {
-    const reponse = await ExpensesAPI.retrieve(params.id);
+    const reponse = await ExpensesAPI.retrieve(params.id, authTokens.access);
     if(reponse.status === 404) {
       setErrorLoad('Page not found')
     }
@@ -35,7 +37,7 @@ const ExpensesId = () => {
   })
 
   let [fetchItProject, isItProjectLoading, errorItProject] = useFetching(async () => {
-    const reponse = await ItProjectAPI.list();
+    const reponse = await ItProjectAPI.list(authTokens.access);
     let data = await reponse.json();
     setItProjects(data)
   })
@@ -72,19 +74,19 @@ const ExpensesId = () => {
 
   const createHandler = async (data, e) => {
     e.preventDefault()
-    const response = await ExpensesAPI.create(Expenses);
+    const response = await ExpensesAPI.create(Expenses, authTokens.access);
     await navigate(-1)
   }
 
   const updateHandler = async (data, e) => {
     e.preventDefault()
-    const response = await ExpensesAPI.update(Expenses.id, Expenses);
+    const response = await ExpensesAPI.update(Expenses.id, Expenses, authTokens.access);
     await navigate(-1)
   }
 
   const destroyHandler = async (e) => {
     e.preventDefault()
-    const response = await ExpensesAPI.destroy(Expenses.id);
+    const response = await ExpensesAPI.destroy(Expenses.id, authTokens.access);
     await navigate(-1)
   }
 
@@ -102,7 +104,7 @@ const ExpensesId = () => {
           <button onClick={() => navigate(-1)} className={["button", "blueButton"].join(' ')}>Назад</button>
 
           <form className="form">
-              <h2 className="form__title">Expenses</h2>
+              <h2 className="form__title">Затраты</h2>
               <div className="form__group">
                   <div className="form__item">
                       <div>

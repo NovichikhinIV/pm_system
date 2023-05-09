@@ -1,41 +1,56 @@
 export default class ExpensesAPI {
-    static async list() {
-        let response = await fetch('/api/Expenses/')
+    static async list(userAccesToken) {
+        let response = await fetch(`http://localhost:8000/api/Expenses/`, {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userAccesToken}`
+            }
+        })
         return response;
     }
 
-    static async create(obj) {
-        let response = await fetch(`/api/Expenses/`, {
+    static async create(obj, userAccesToken) {
+        let response = await fetch(`http://localhost:8000/api/Expenses/`, {
             method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userAccesToken}`
             },
             body: JSON.stringify(obj)
         })
         return response;
     }
 
-    static async retrieve(id) {
-        let response = await fetch(`/api/Expenses/${id}/`)
+    static async retrieve(id, userAccesToken) {
+        let response = await fetch(`http://localhost:8000/api/Expenses/${id}/`, {
+            method: "GET",
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userAccesToken}`
+            }
+        })
         return response;
     }
 
-    static async update(id, obj) {
-        let response = await fetch(`/api/Expenses/${id}/`, {
+    static async update(id, obj, userAccesToken) {
+        let response = await fetch(`http://localhost:8000/api/Expenses/${id}/`, {
             method: "PUT",
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userAccesToken}`
             },
             body: JSON.stringify(obj)
         })
         return response;
     }
 
-    static async destroy(id) {
-        let response = await fetch(`/api/Expenses/${id}/`, {
+    static async destroy(id, userAccesToken) {
+        let response = await fetch(`http://localhost:8000/api/Expenses/${id}/`, {
             method: "DELETE",
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${userAccesToken}`
             }
         })
         return response;

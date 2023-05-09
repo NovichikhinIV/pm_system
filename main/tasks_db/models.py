@@ -21,6 +21,7 @@ class ItProject(models.Model):
 
 class DevelopmentTeam(models.Model):
     about = models.TextField(verbose_name="о команде")
+    user_id = models.IntegerField(verbose_name="Пользователь")
 
     def __str__(self) -> str:
         return "development team " + str(self.pk)
