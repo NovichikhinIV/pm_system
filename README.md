@@ -1,6 +1,6 @@
 # env файл
 
-перед запуском надо добавить .env файл в ./main/main:
+перед запуском надо добавить .env файл в ./main/main, ./auth/auth, ./reports/reports
 
 файл .env:
 ```
@@ -29,4 +29,9 @@ DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRE
 frontend 
 
 main - микросервис с основной базой данных
+
+auth - регистрация и аутентификация пользователей
+
+reports - отчеты по проектам
+
 

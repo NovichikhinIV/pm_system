@@ -240,6 +240,40 @@ h1 {
 }
 
 
+.filterContainer {
+	display: flex;
+}
 .filter {
-	margin: 20px 0;
+	margin: 20px;
+}
+
+
+/* Tasks */
+
+.taskContainer {
+	display: flex;
+}
+
+.taskContainer__elem {
+	margin-right: 50px;
+}
+
+.taskContainer__elem_marginLeft {
+	margin-left: 10px;
+}
+
+.taskContainer__elem_marginTopBottom {
+	margin: 5px 0;
+}
+
+.marginTopBottom {
+	margin: 10px 0;
+}
+
+.spaceTop {
+	margin-top: 50px;
+}
+
+.spaceBottom {
+	margin-bottom: 50px;
 }

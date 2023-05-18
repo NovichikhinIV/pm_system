@@ -11,7 +11,7 @@ const Developer = () => {
   let [Developers, setDevelopers] = useState([]);
   let [DevelopersFiltered, setDevelopersFiltered] = useState([]);
   let [DevelopmentTeams, setDevelopmentTeams] = useState([]);
-  let [Team, setTeam] = useState('');
+  let [Team, setTeam] = useState('-');
   let [isNoData, setIsNoData] = useState(true);
   let [FilterText, setFilterText] = useState('');
   let [IsLoading, setIsLoading] = useState(true);
@@ -28,7 +28,6 @@ const Developer = () => {
     if (data.length !== 0)
     {
       setIsNoData(false)
-      setTeam(data[0].team)
     }
   })
 
@@ -53,19 +52,29 @@ const Developer = () => {
 
   const filterHandler = async (e) => {
     e.preventDefault()
-    setDevelopersFiltered(Developers.filter((el) => el.team === parseInt(Team)))
-    setFilterText(`Разработчики для ${Team} команды разработчиков`)
+    if(Team !== '-')
+    {
+      setDevelopersFiltered(Developers.filter((el) => el.team === parseInt(Team)))
+      setFilterText(`Разработчики для ${Team} команды разработчиков`)
+    }
+    else {
+      filterClearHandler(e)
+    }
   }
   
   const filterClearHandler = async (e) => {
     e.preventDefault()
     setDevelopersFiltered(Developers)
     setFilterText('')
+    setTeam('-')
   }
 
   return (
     <div className="container">
-
+      {IsLoading ?
+      <h1>Loading</h1>
+      :
+      <>
       <h1>Команды разработчиков</h1>
 
       <Link to="/DevelopmentTeam/new">
@@ -74,12 +83,14 @@ const Developer = () => {
         </button>
       </Link>
       
-      {IsLoading ?
+      {DevelopmentTeams.length === 0 ?
       <></>
       :
+      <>
       <MyTable data={DevelopmentTeams} pageName='DevelopmentTeam'/>
+      </>
       }
-
+      
 
 
       <h1>Разработчики</h1>
@@ -97,6 +108,7 @@ const Developer = () => {
         <div>Команда разработчиков</div>
         
         <select name="team" value={Team} onChange={e => setTeam(e.target.value)}>
+        <option>-</option>
         {DevelopmentTeams.map((obj, index) => (
             <option value={obj.id} key={index}>{obj.id}</option>
         ))} 
@@ -105,11 +117,19 @@ const Developer = () => {
         <button  onClick={(filterHandler)} className={["button", "blueButton"].join(' ')}>Применить</button>
         <button  onClick={(filterClearHandler)} className={["button", "blueButton"].join(' ')}>Очистить</button>
 
+        {DevelopersFiltered.length === 0 ?
+        <></>
+        :
+        <>
         <div>{FilterText}</div>
-
         <MyTable data={DevelopersFiltered} pageName='Developer'/>
+        </>
+        }
       </div>
       }
+
+      </>
+    }
 
     </div>
   )

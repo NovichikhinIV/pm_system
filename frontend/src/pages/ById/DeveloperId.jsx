@@ -42,7 +42,7 @@ const DeveloperId = () => {
   let [fetchDevelopmentTeams, isTeamsLoading, errorTeams] = useFetching(async () => {
     const reponse = await DevelopmentTeamAPI.list(authTokens.access);
     let data = await reponse.json();
-    setDevelopmentTeams(data)
+    setDevelopmentTeams(data.sort((a, b) => a.id > b.id ? 1 : -1))
   })
 
 

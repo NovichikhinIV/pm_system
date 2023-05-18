@@ -11,7 +11,7 @@ const ItProject = () => {
   let [ItProjects, setItProjects] = useState([]);
   let [ItProjectsFiltered, setItProjectsFiltered] = useState([]);
   let [DevelopmentTeams, setDevelopmentTeams] = useState([]);
-  let [Team, setTeam] = useState('');
+  let [Team, setTeam] = useState('-');
   let [isNoData, setIsNoData] = useState(true);
   let [FilterText, setFilterText] = useState('');
 
@@ -27,7 +27,6 @@ const ItProject = () => {
     if (data.length !== 0)
     {
       setIsNoData(false)
-      setTeam(data[0].team)
     }
   })
 
@@ -45,14 +44,21 @@ const ItProject = () => {
 
   const filterHandler = async (e) => {
     e.preventDefault()
-    setItProjectsFiltered(ItProjects.filter((el) => el.team === parseInt(Team)))
-    setFilterText(`ИТ-проекты для ${Team} команды разработчиков`)
+    if(Team !== '-')
+    {
+      setItProjectsFiltered(ItProjects.filter((el) => el.team === parseInt(Team)))
+      setFilterText(`ИТ-проекты для ${Team} команды разработчиков`)
+    }
+    else {
+      filterClearHandler(e)
+    }
   }
   
   const filterClearHandler = async (e) => {
     e.preventDefault()
     setItProjectsFiltered(ItProjects)
     setFilterText('')
+    setTeam('-')
   }
 
   return (
@@ -73,6 +79,7 @@ const ItProject = () => {
         <div>Команда разработчиков</div>
         
         <select name="team" value={Team} onChange={e => setTeam(e.target.value)}>
+        <option>-</option>
         {DevelopmentTeams.map((obj, index) => (
             <option value={obj.id} key={index}>{obj.id}</option>
         ))} 
@@ -81,9 +88,14 @@ const ItProject = () => {
         <button  onClick={(filterHandler)} className={["button", "blueButton"].join(' ')}>Применить</button>
         <button  onClick={(filterClearHandler)} className={["button", "blueButton"].join(' ')}>Очистить</button>
         
+        {ItProjectsFiltered.length === 0 ?
+        <></>
+        :
+        <>
         <div>{FilterText}</div>
-
         <MyTable data={ItProjectsFiltered} pageName='ItProject'/>
+        </>
+        }
       </div>
       }
 

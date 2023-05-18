@@ -12,6 +12,8 @@ import TaskId from "../pages/ById/TaskId";
 import SubtaskId from "../pages/ById/SubtaskId";
 import ExpensesId from "../pages/ById/ExpensesId";
 
+import Report from "../pages/Report";
+
 import Main from "../pages/Main";
 import Login from "../pages/Login";
 import Registration from "../pages/Registration";
@@ -22,7 +24,7 @@ export const privateRoutes = [
     // {path: '/DevelopmentTeam', component: DevelopmentTeam},
     {path: '/Developer', component: Developer},
     {path: '/Task', component: Task},
-    {path: '/Subtask', component: Subtask},
+    // {path: '/Subtask', component: Subtask},
     {path: '/Expenses', component: Expenses},
 
     {path: '/ItProject/:id', component: ItProjectId},
@@ -31,6 +33,8 @@ export const privateRoutes = [
     {path: '/Task/:id', component: TaskId},
     {path: '/Subtask/:id', component: SubtaskId},
     {path: '/Expenses/:id', component: ExpensesId},
+
+    {path: '/ItProject/:id/report', component: Report},
 ]
 
 

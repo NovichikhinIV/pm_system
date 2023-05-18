@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useContext } from 'react'
-import { useNavigate, useParams} from 'react-router-dom'
+import { Link, useNavigate, useParams} from 'react-router-dom'
 import TaskAPI from '../../API/TaskAPI';
 import DeveloperAPI from '../../API/DeveloperAPI';
+import SubtaskAPI from '../../API/SubtaskAPI';
 import { useFetching } from '../../hooks/useFetching';
 import {useForm} from 'react-hook-form'
 import AuthContext from '../../context/AuthContext'
+import MyTable from '../../components/UI/table/MyTable';
 
 const ItProjectId = () => {
   const params = useParams()
@@ -26,6 +28,10 @@ const ItProjectId = () => {
   const [IsNew, setIsNew] = useState(false);
   const [IsLoading, setIsLoading] = useState(true);
   const [ProtectedError, setProtectedError] = useState('');
+  
+  const [Subtasks, setSubtasks] = useState([]);
+  const [Check, setChech] = useState(false);
+  const [DisabledFlag, setDisabledFlag] = useState(false)
 
 
   let [fetchTaskById, isTaskLoading, errorTask] = useFetching(async (id) => {
@@ -40,7 +46,14 @@ const ItProjectId = () => {
   let [fetchDevelopers, isDevelopersLoading, errorDevelopers] = useFetching(async () => {
     const reponse = await DeveloperAPI.list(authTokens.access);
     let data = await reponse.json();
-    setDevelopers(data)
+    setDevelopers(data.sort((a, b) => a.id > b.id ? 1 : -1))
+  })
+
+
+  let [fetchSubtasks, isSubtasksLoading, errorSubtask] = useFetching(async (id) => {
+    const reponse = await SubtaskAPI.list(authTokens.access);
+    let data = await reponse.json();
+    setSubtasks(data.sort((a, b) => a.id > b.id ? 1 : -1))
   })
 
 
@@ -53,6 +66,7 @@ const ItProjectId = () => {
     }
     else {
       if(typeof fetchTaskById === "function") {fetchTaskById(params.id) }
+      if(typeof fetchSubtasks === "function") {fetchSubtasks() }
     }
   }, [])
 
@@ -64,13 +78,22 @@ const ItProjectId = () => {
     }
     else if(IsNew && !isDevelopersLoading) {
       setIsLoading(false)
-      setTask({name: '', description: '', start_time: null, lead_time: '', time_spent: null, end_time: null, developer: Developers[0].id})
+      setTask({name: '', description: '', lead_time: '', time_spent: null, start_time: null, end_time: null, status: 'не начато', developer: Developers[0].id})
     }
-    else if(!isTaskLoading && !isDevelopersLoading) {
+    else if(!isTaskLoading && !isDevelopersLoading && !isSubtasksLoading) {
       setIsLoading(false)
+      setSubtasks(Subtasks.filter((el) => el.task === parseInt(Task.id)))
+      setChech(true)
     }
-  }, [IsNew, isTaskLoading, isDevelopersLoading])
+  }, [IsNew, isTaskLoading, isDevelopersLoading, isSubtasksLoading])
 
+
+  useEffect(() => {
+    if(Subtasks.length !== 0) {
+      setDisabledFlag(true)
+    }
+
+  }, [Check])
 
 
   const createHandler = async (data, e) => {
@@ -133,12 +156,6 @@ const ItProjectId = () => {
                   </div>
 
                   <div className="form__item">
-                      <label htmlFor="start_time">Время начала</label>
-                      <input type="date" name="start_time" max={Task.end_time} value={Task.start_time} onChange={e => setTask({...Task, 'start_time': e.target.value})}
-                      />
-                  </div>
-
-                  <div className="form__item">
                       <div>
                         {errors.lead_time && errors.lead_time.message ? 
                         <p>{errors.lead_time.message.toString()}</p> :
@@ -153,7 +170,7 @@ const ItProjectId = () => {
                                 message: "Введите целое неотрицательное число"
                             }
                           })}
-                          value={Task.lead_time} onChange={e => setTask({...Task, 'lead_time': e.target.value})}
+                          value={Task.lead_time} onChange={e => setTask({...Task, 'lead_time': e.target.value})} disabled={DisabledFlag}
                       />
                   </div>
 
@@ -171,14 +188,31 @@ const ItProjectId = () => {
                                 message: "Введите целое неотрицательное число"
                             }
                           })}
-                          value={Task.time_spent} onChange={e => setTask({...Task, 'time_spent': e.target.value})}
+                          value={Task.time_spent} onChange={e => setTask({...Task, 'time_spent': e.target.value})} disabled={DisabledFlag}
+                      />
+                  </div>
+
+                  <div className="form__item">
+                      <label htmlFor="start_time">Время начала</label>
+                      <input type="date" name="start_time" max={Task.end_time} value={Task.start_time} 
+                      onChange={e => e.target.value !== '' ? setTask({...Task, 'start_time': e.target.value}) : setTask({...Task, 'start_time': null})} disabled={DisabledFlag}
                       />
                   </div>
 
                   <div className="form__item">
                       <label htmlFor="end_time">Время окончания</label>
-                      <input type="date" name="end_time" min={Task.start_time} value={Task.end_time} onChange={e => setTask({...Task, 'end_time': e.target.value})}
+                      <input type="date" name="end_time" min={Task.start_time} value={Task.end_time} 
+                      onChange={e => e.target.value !== '' ? setTask({...Task, 'end_time': e.target.value}) : setTask({...Task, 'end_time': null})} disabled={DisabledFlag}
                       />
+                  </div>
+
+                  <div className="form__item">
+                      <label htmlFor="status">Статус</label>
+                      <select name="status" value={Task.status} onChange={e => setTask({...Task, 'status': e.target.value})} disabled={DisabledFlag}>
+                          <option>не начато</option>
+                          <option>в процессе</option>
+                          <option>выполнено</option>
+                      </select>
                   </div>
 
                   <div className="form__item">
@@ -211,6 +245,20 @@ const ItProjectId = () => {
               </div>
           </form>
 
+          <h1>Подзадачи</h1>
+
+          <Link to="/Subtask/new">
+            <button className={["button", "blueButton"].join(' ')}>
+              Добавить подзадачу
+            </button>
+          </Link>
+
+
+          {Subtasks.length === 0 ?
+          <></>
+          :
+          <MyTable data={Subtasks} pageName='Subtask'/>
+          }
 
           </>
           }

@@ -1,6 +1,5 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from rest_framework.decorators import action
 from rest_framework.exceptions import AuthenticationFailed
 from django.shortcuts import get_object_or_404
 from django.db.models import ProtectedError
@@ -10,6 +9,7 @@ from .serializers import ItProjectSerializer, DevelopmentTeamSerializer, Develop
 from .serializers import ItProjectSerializerLabels, DevelopmentTeamSerializerLabels, DevelopmentTeamSerializerWithoutUserLabels, DeveloperSerializerLabels, TaskSerializerLabels, SubtaskSerializerLabels, ExpensesSerializerLabels
 
 from .service.auth_service import Auth
+from .service.task_service import taskUpdate
 from .decorators import is_authorized
 from .helpers import extract_token
 
@@ -22,7 +22,7 @@ class ItProjectViewSet(viewsets.ViewSet):
         token = extract_token(request.headers)
         user = Auth().get_user(token).get('id')
 
-        queryset = ItProject.objects.filter(team__user_id=user)
+        queryset = ItProject.objects.filter(team__user_id=user).order_by('id')
         
         serializer = ItProjectSerializerLabels(queryset, many=True)
         return Response(serializer.data)
@@ -33,7 +33,6 @@ class ItProjectViewSet(viewsets.ViewSet):
         user = Auth().get_user(token).get('id')
         
         queryset = DevelopmentTeam.objects.filter(id=request.data['team']).filter(user_id=user).first()
-        # queryset = ItProject.objects.filter(team__user_id=user).first()
         if not queryset:
             raise AuthenticationFailed('Unauthenticated')
         
@@ -87,7 +86,7 @@ class DevelopmentTeamViewSet(viewsets.ViewSet):
         token = extract_token(request.headers)
         user = Auth().get_user(token).get('id')
 
-        queryset = DevelopmentTeam.objects.filter(user_id=user)
+        queryset = DevelopmentTeam.objects.filter(user_id=user).order_by('id')
 
         serializer = DevelopmentTeamSerializerWithoutUserLabels(queryset, many=True)
         return Response(serializer.data)
@@ -150,7 +149,7 @@ class DeveloperViewSet(viewsets.ViewSet):
         token = extract_token(request.headers)
         user = Auth().get_user(token).get('id')
 
-        queryset = Developer.objects.filter(team__user_id=user)
+        queryset = Developer.objects.filter(team__user_id=user).order_by('id')
 
         serializer = DeveloperSerializerLabels(queryset, many=True)
         return Response(serializer.data)
@@ -161,7 +160,6 @@ class DeveloperViewSet(viewsets.ViewSet):
         user = Auth().get_user(token).get('id')
         
         queryset = DevelopmentTeam.objects.filter(id=request.data['team']).filter(user_id=user).first()
-        # queryset = Developer.objects.filter(team__user_id=user).first()
         if not queryset:
             raise AuthenticationFailed('Unauthenticated')
         
@@ -215,7 +213,7 @@ class TaskViewSet(viewsets.ViewSet):
         token = extract_token(request.headers)
         user = Auth().get_user(token).get('id')
 
-        queryset = Task.objects.filter(developer__team__user_id=user)
+        queryset = Task.objects.filter(developer__team__user_id=user).order_by('id')
 
         serializer = TaskSerializerLabels(queryset, many=True)
         return Response(serializer.data)
@@ -226,7 +224,6 @@ class TaskViewSet(viewsets.ViewSet):
         user = Auth().get_user(token).get('id')
         
         queryset = Developer.objects.filter(id=request.data['developer']).filter(team__user_id=user).first()
-        # queryset = Task.objects.filter(developer__team__user_id=user).first()
         if not queryset:
             raise AuthenticationFailed('Unauthenticated')
         
@@ -280,7 +277,7 @@ class SubtaskViewSet(viewsets.ViewSet):
         token = extract_token(request.headers)
         user = Auth().get_user(token).get('id')
 
-        queryset = Subtask.objects.filter(task__developer__team__user_id=user)
+        queryset = Subtask.objects.filter(task__developer__team__user_id=user).order_by('id')
 
         serializer = SubtaskSerializerLabels(queryset, many=True)
         return Response(serializer.data)
@@ -289,15 +286,18 @@ class SubtaskViewSet(viewsets.ViewSet):
     def create(self, request):
         token = extract_token(request.headers)
         user = Auth().get_user(token).get('id')
+        task_id = request.data['task']
         
         queryset = Task.objects.filter(id=request.data['task']).filter(developer__team__user_id=user).first()
-        # queryset = Subtask.objects.filter(task__developer__team__user_id=user).first()  
         if not queryset:
             raise AuthenticationFailed('Unauthenticated')
         
         serializer = SubtaskSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        
+        taskUpdate(task_id)
+        
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @is_authorized
@@ -315,12 +315,16 @@ class SubtaskViewSet(viewsets.ViewSet):
     def update(self, request, pk=None):
         token = extract_token(request.headers)
         user = Auth().get_user(token).get('id')
+        task_id = request.data['task']
         
         queryset = Subtask.objects.filter(id=pk, task__developer__team__user_id=user).first()
         
         serializer = SubtaskSerializer(instance=queryset, data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        
+        taskUpdate(task_id)
+        
         return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
     @is_authorized
@@ -329,11 +333,14 @@ class SubtaskViewSet(viewsets.ViewSet):
         user = Auth().get_user(token).get('id')
         
         queryset = Subtask.objects.filter(id=pk, task__developer__team__user_id=user).first()
+        task_id = queryset.task_id
 
         try:
             queryset.delete()
         except ProtectedError:
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        taskUpdate(task_id)
         
         return Response(status=status.HTTP_204_NO_CONTENT)   
  
@@ -345,7 +352,7 @@ class ExpensesViewSet(viewsets.ViewSet):
         token = extract_token(request.headers)
         user = Auth().get_user(token).get('id')
 
-        queryset = Expenses.objects.filter(project__team__user_id=user)
+        queryset = Expenses.objects.filter(project__team__user_id=user).order_by('id')
 
         serializer = ExpensesSerializerLabels(queryset, many=True)
         return Response(serializer.data)
@@ -356,7 +363,6 @@ class ExpensesViewSet(viewsets.ViewSet):
         user = Auth().get_user(token).get('id')
         
         queryset = ItProject.objects.filter(id=request.data['project']).filter(team__user_id=user).first()
-        # queryset = Expenses.objects.filter(project__team__user_id=user).first()
         if not queryset:
             raise AuthenticationFailed('Unauthenticated')
         

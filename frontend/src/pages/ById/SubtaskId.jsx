@@ -39,7 +39,7 @@ const ItProjectId = () => {
   let [fetchTasks, isTasksLoading, errorTasks] = useFetching(async () => {
     const reponse = await TaskAPI.list(authTokens.access);
     let data = await reponse.json();
-    setTasks(data)
+    setTasks(data.sort((a, b) => a.id > b.id ? 1 : -1))
   })
 
 
@@ -63,7 +63,7 @@ const ItProjectId = () => {
     }
     else if(IsNew && !isTasksLoading) {
       setIsLoading(false)
-      setSubtask({name: '', description: '', start_time: null, lead_time: '', time_spent: null, end_time: null, task: Tasks[0].id})
+      setSubtask({name: '', description: '', lead_time: '', time_spent: null, start_time: null, end_time: null, status: 'не начато', task: Tasks[0].id})
     }
     else if(!isSubtaskLoading && !isTasksLoading) {
       setIsLoading(false)
@@ -127,12 +127,6 @@ const ItProjectId = () => {
                   </div>
 
                   <div className="form__item">
-                      <label htmlFor="start_time">Время начала</label>
-                      <input type="date" name="start_time" max={Subtask.end_time} value={Subtask.start_time} onChange={e => setSubtask({...Subtask, 'start_time': e.target.value})}
-                      />
-                  </div>
-
-                  <div className="form__item">
                       <div>
                         {errors.lead_time && errors.lead_time.message ? 
                         <p>{errors.lead_time.message.toString()}</p> :
@@ -170,9 +164,26 @@ const ItProjectId = () => {
                   </div>
 
                   <div className="form__item">
-                      <label htmlFor="end_time">Время окончания</label>
-                      <input type="date" name="end_time" min={Subtask.start_time} value={Subtask.end_time} onChange={e => setSubtask({...Subtask, 'end_time': e.target.value})}
+                      <label htmlFor="start_time">Время начала</label>
+                      <input type="date" name="start_time" max={Subtask.end_time} value={Subtask.start_time} 
+                      onChange={e => e.target.value !== '' ? setSubtask({...Subtask, 'start_time': e.target.value}) : setSubtask({...Subtask, 'start_time': null})}
                       />
+                  </div>
+
+                  <div className="form__item">
+                      <label htmlFor="end_time">Время окончания</label>
+                      <input type="date" name="end_time" min={Subtask.start_time} value={Subtask.end_time} 
+                      onChange={e => e.target.value !== '' ? setSubtask({...Subtask, 'end_time': e.target.value}) : setSubtask({...Subtask, 'end_time': null})}
+                      />
+                  </div>
+
+                  <div className="form__item">
+                      <label htmlFor="status">Статус</label>
+                      <select name="status" value={Subtask.status} onChange={e => setSubtask({...Subtask, 'status': e.target.value})}>
+                          <option>не начато</option>
+                          <option>в процессе</option>
+                          <option>выполнено</option>
+                      </select>
                   </div>
 
                   <div className="form__item">

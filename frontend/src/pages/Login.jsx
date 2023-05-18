@@ -31,7 +31,7 @@ const Login = () => {
               <p>{errors.username.message.toString()}</p> :
               <p></p>}
             </div>
-            <label htmlFor="username">username</label>
+            <label htmlFor="username">Имя пользователя</label>
             <input type="text"
               {...register("username", {
                 required: "Поле обязательно к заполнению",
@@ -45,7 +45,7 @@ const Login = () => {
               <p>{errors.password.message.toString()}</p> :
               <p></p>}
             </div>
-            <label htmlFor="password">password</label>
+            <label htmlFor="password">Пароль</label>
             <input type="password" 
               {...register("password", {
                 required: "Поле обязательно к заполнению",

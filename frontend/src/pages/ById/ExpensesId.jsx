@@ -39,7 +39,7 @@ const ExpensesId = () => {
   let [fetchItProject, isItProjectLoading, errorItProject] = useFetching(async () => {
     const reponse = await ItProjectAPI.list(authTokens.access);
     let data = await reponse.json();
-    setItProjects(data)
+    setItProjects(data.sort((a, b) => a.id > b.id ? 1 : -1))
   })
 
 

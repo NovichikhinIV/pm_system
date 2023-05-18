@@ -5,18 +5,10 @@ from django.db.models import CheckConstraint, Q, F
 class ItProject(models.Model):
     name = models.CharField(max_length=255, verbose_name="Название")
     description = models.TextField(blank=True, null=True, verbose_name="Описание")
-    start_date = models.DateField(auto_now_add=False, verbose_name="Время начала")
-    deadline = models.DateField(auto_now_add=False, verbose_name="Крайний срок")
     team = models.ForeignKey('DevelopmentTeam', on_delete=models.PROTECT, verbose_name="Команда разработки")
 
     def __str__(self) -> str:
-        return self.name
-    
-    class Meta:
-        constraints = [
-            CheckConstraint(check = Q(deadline__gte=F('start_date')), name = 'Время окончания проекта'),
-        ]
-    
+        return self.name    
 
 
 class DevelopmentTeam(models.Model):
@@ -47,12 +39,22 @@ class Developer(models.Model):
     
 
 class Task(models.Model):
+    NOT_STARTED = 'не начато'
+    IN_PROGRESS = 'в процессе'
+    DONE = 'выполнено'
+    TASK_STATUS_CHOICES = (
+        (NOT_STARTED, NOT_STARTED),
+        (IN_PROGRESS, IN_PROGRESS),
+        (DONE, DONE),
+    )
+    
     name = models.CharField(max_length=255, verbose_name="Название")
     description = models.TextField(blank=True, null=True, verbose_name="Описание")
-    start_time = models.DateField(auto_now_add=False, blank=True, null=True, verbose_name="Время начала")
     lead_time = models.IntegerField(verbose_name="Часов на выполение")
     time_spent = models.IntegerField(blank=True, null=True, default=0, verbose_name="Потраченное время")
+    start_time = models.DateField(auto_now_add=False, blank=True, null=True, verbose_name="Время начала")
     end_time = models.DateField(auto_now_add=False, blank=True, null=True, verbose_name="Время окончания")
+    status = models.CharField(max_length=255, choices=TASK_STATUS_CHOICES, default=NOT_STARTED, verbose_name="Статус")
     developer = models.ForeignKey('Developer', on_delete=models.PROTECT, verbose_name="Разработчик")
 
     def __str__(self) -> str:
@@ -68,13 +70,23 @@ class Task(models.Model):
 
 
 class Subtask(models.Model):
+    NOT_STARTED = 'не начато'
+    IN_PROGRESS = 'в процессе'
+    DONE = 'выполнено'
+    TASK_STATUS_CHOICES = (
+        (NOT_STARTED, NOT_STARTED),
+        (IN_PROGRESS, IN_PROGRESS),
+        (DONE, DONE),
+    )
+    
     name = models.CharField(max_length=255, verbose_name="Название")
     description = models.TextField(blank=True, null=True, verbose_name="Описание")
-    start_time = models.DateField(auto_now_add=False, blank=True, null=True, verbose_name="Время начала")
     lead_time = models.IntegerField(verbose_name="Часов на выполение")
     time_spent = models.IntegerField(blank=True, null=True, default=0, verbose_name="Потраченное время")
+    start_time = models.DateField(auto_now_add=False, blank=True, null=True, verbose_name="Время начала")
     end_time = models.DateField(auto_now_add=False, blank=True, null=True, verbose_name="Время окончания")
-    task = models.ForeignKey('Task', on_delete=models.PROTECT, verbose_name="Задача")
+    status = models.CharField(max_length=255, choices=TASK_STATUS_CHOICES, default=NOT_STARTED, verbose_name="Статус")
+    task = models.ForeignKey('Task', on_delete=models.CASCADE, verbose_name="Задача")
     
     def __str__(self) -> str:
         return self.name

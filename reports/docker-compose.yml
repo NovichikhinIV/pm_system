@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  reports:
+    container_name: reports
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      sh -c 'python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8002'
+    ports:
+      - "8002:8002"
+    volumes:
+      - .:/app
+    depends_on:
+      - db_reports
+    env_file: reports/.env
+    networks:
+      - backend
+      - backend_reports_network
+
+  db_reports:
+    container_name: db_reports
+    image: postgres
+    restart: always
+    volumes:
+      - ./.database/postgres/data:/var/lib/postgresql/data
+    ports:
+      - "5434:5434"
+    command: -p 5434
+    env_file: reports/.env
+    networks:
+      - backend_reports_network
+
+networks:
+  backend_reports_network:
+  backend:
+    external: true

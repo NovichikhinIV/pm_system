@@ -40,7 +40,7 @@ const ItProjectId = () => {
   let [fetchDevelopmentTeams, isTeamsLoading, errorTeams] = useFetching(async () => {
     const reponse = await DevelopmentTeamAPI.list(authTokens.access);
     let data = await reponse.json();
-    setDevelopmentTeams(data)
+    setDevelopmentTeams(data.sort((a, b) => a.id > b.id ? 1 : -1))
   })
 
 
@@ -64,7 +64,7 @@ const ItProjectId = () => {
     }
     else if(IsNew && !isTeamsLoading) {
       setIsLoading(false)
-      setItProject({name: '', description: '', start_date: '', deadline: '', team: DevelopmentTeams[0].id})
+      setItProject({name: '', description: '', team: DevelopmentTeams[0].id})
     }
     else if(!isProjectLoading && !isTeamsLoading) {
       setIsLoading(false)
@@ -133,36 +133,6 @@ const ItProjectId = () => {
                   </div>
 
                   <div className="form__item">
-                      <div>
-                        {errors.start_date && errors.start_date.message ? 
-                        <p>{errors.start_date.message.toString()}</p> :
-                        <p></p>}
-                      </div>
-                      <label htmlFor="start_date">Время начала</label>
-                      <input type="date" 
-                          {...register("start_date", {
-                            required: "Поле обязательно к заполнению",
-                          })}
-                          max={ItProject.deadline} value={ItProject.start_date} onChange={e => setItProject({...ItProject, 'start_date': e.target.value})}
-                      />
-                  </div>
-
-                  <div className="form__item">
-                      <div>
-                        {errors.deadline && errors.deadline.message ? 
-                        <p>{errors.deadline.message.toString()}</p> :
-                        <p></p>}
-                      </div>
-                      <label htmlFor="deadline">Крайний срок</label>
-                      <input type="date"
-                          {...register("deadline", {
-                            required: "Поле обязательно к заполнению",
-                          })}
-                          min={ItProject.start_date} value={ItProject.deadline} onChange={e => setItProject({...ItProject, 'deadline': e.target.value})}
-                      />
-                  </div>
-
-                  <div className="form__item">
                       <label htmlFor="team">Команда разработки</label>
                       <select name="team" value={ItProject.team} onChange={e => setItProject({...ItProject, 'team': e.target.value})}>
                       {DevelopmentTeams.map((obj, index) => (
@@ -190,11 +160,16 @@ const ItProjectId = () => {
               </div>
           </form>
           
+          {IsNew ?
+          <></>
+          :
           <Link to={`/ItProject/${params.id}/report`}>
             <button className={["button", "greenButton"].join(' ')}>
               Составить отчет по проекту
             </button>
           </Link>
+          }
+          
           
 
           </>

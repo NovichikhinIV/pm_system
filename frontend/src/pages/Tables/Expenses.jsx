@@ -11,7 +11,7 @@ const Expenses = () => {
   let [Expenses, setExpenses] = useState([]);
   let [ExpensesFiltered, setExpensesFiltered] = useState([]);
   let [ItProjects, setItProjects] = useState([]);
-  let [Project, setProject] = useState('');
+  let [Project, setProject] = useState('-');
   let [isNoData, setIsNoData] = useState(true);
   let [FilterText, setFilterText] = useState('');
 
@@ -27,7 +27,6 @@ const Expenses = () => {
     if (data.length !== 0)
     {
       setIsNoData(false)
-      setProject(data[0].project)
     }
   })
 
@@ -45,14 +44,21 @@ const Expenses = () => {
 
   const filterHandler = async (e) => {
     e.preventDefault()
-    setExpensesFiltered(Expenses.filter((el) => el.project === parseInt(Project)))
-    setFilterText(`Затраты для ${Project} проекта`)
+    if(Project !== '-')
+    {
+      setExpensesFiltered(Expenses.filter((el) => el.project === parseInt(Project)))
+      setFilterText(`Затраты для ${Project} проекта`)
+    }
+    else {
+      filterClearHandler(e)
+    }
   }
   
   const filterClearHandler = async (e) => {
     e.preventDefault()
     setExpensesFiltered(Expenses)
     setFilterText('')
+    setProject('-')
   }
 
   return (
@@ -73,6 +79,7 @@ const Expenses = () => {
         <div>ИТ-проект</div>
         
         <select name="project" value={Project} onChange={e => setProject(e.target.value)}>
+        <option>-</option>
         {ItProjects.map((obj, index) => (
             <option value={obj.id} key={index}>{obj.id}</option>
         ))} 
@@ -81,9 +88,14 @@ const Expenses = () => {
         <button  onClick={(filterHandler)} className={["button", "blueButton"].join(' ')}>Применить</button>
         <button  onClick={(filterClearHandler)} className={["button", "blueButton"].join(' ')}>Очистить</button>
   
+        {ExpensesFiltered.length === 0 ?
+        <></>
+        :
+        <>
         <div>{FilterText}</div>
-
         <MyTable data={ExpensesFiltered} pageName='Expenses'/>
+        </>
+        }
       </div>
       }
 

@@ -6,6 +6,7 @@ import AuthAPI from '../API/AuthAPI';
 const Registration = () => {
 
   const [error, setError] = useState("");
+  const [ConfirmError, setConfirmError] = useState('');
 
   const {
     register,
@@ -17,18 +18,22 @@ const Registration = () => {
 
   const registrationHandler = async (formData, e) => {
     e.preventDefault()
-    let response = await AuthAPI.registration({'username':e.target.username.value, 'password':e.target.password.value});
-
-    let data = await response.json()
-
-    if(response.status === 201){
-        navigate('/login')
-    } 
-    else if (response.status === 400){
-        setError("Пользователь с таким именем уже существует")
+    if(e.target.password.value != e.target.passwordConfirm.value) {
+      setConfirmError('Пароли не совпадают')
     }
     else {
-        alert('Что то пошло не так')
+      let response = await AuthAPI.registration({'username':e.target.username.value, 'password':e.target.password.value});
+      let data = await response.json()
+  
+      if(response.status === 201){
+          navigate('/login')
+      } 
+      else if (response.status === 400){
+          setError("Пользователь с таким именем уже существует")
+      }
+      else {
+          alert('Что то пошло не так')
+      }
     }
   }
 
@@ -45,7 +50,7 @@ const Registration = () => {
               <p>{errors.username.message.toString()}</p> :
               <p></p>}
             </div>
-            <label htmlFor="username">username</label>
+            <label htmlFor="username">Имя пользователя</label>
             <input type="text"
               {...register("username", {
                 required: "Поле обязательно к заполнению",
@@ -59,12 +64,30 @@ const Registration = () => {
               <p>{errors.password.message.toString()}</p> :
               <p></p>}
             </div>
-            <label htmlFor="password">password</label>
+            <label htmlFor="password">Пароль</label>
             <input type="password" 
               {...register("password", {
                 required: "Поле обязательно к заполнению",
               })} 
             />
+          </div>
+
+          <div className="form__item">
+            <div>
+              {errors.passwordConfirm && errors.passwordConfirm.message ? 
+              <p>{errors.passwordConfirm.message.toString()}</p> :
+              <p></p>}
+            </div>
+            <label htmlFor="passwordConfirm">Повторите пароль</label>
+            <input type="password" 
+              {...register("passwordConfirm", {
+                required: "Поле обязательно к заполнению",
+              })} 
+            />
+          </div>
+
+          <div className="form__title">
+            {ConfirmError}
           </div>
 
         </div>
