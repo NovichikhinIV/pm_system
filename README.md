@@ -18,11 +18,7 @@ DATABASE_URL="postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRE
 
 # Запуск
 
-./start.sh
-
-# Остановка
-
-./off.sh
+sudo docker-compose up
 
 # Микросервисы
 
