@@ -8,7 +8,7 @@ import {useForm} from 'react-hook-form'
 import AuthContext from '../../context/AuthContext'
 import MyTable from '../../components/UI/table/MyTable';
 
-const ItProjectId = () => {
+const TaskId = () => {
   const params = useParams()
   const navigate = useNavigate();
   let {authTokens} = useContext(AuthContext)
@@ -269,4 +269,4 @@ const ItProjectId = () => {
   )
 }
 
-export default ItProjectId
+export default TaskId

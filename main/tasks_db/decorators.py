@@ -4,7 +4,6 @@ from .helpers import extract_token
 from .service.auth_service import Auth
 
 
-
 def is_authorized(function):
     @wraps(function)
     def decorator(*args, **kwargs):

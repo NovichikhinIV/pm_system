@@ -6,13 +6,6 @@ const MyTable = ({data, pageName}) => {
   return (
     <div>
         <table className={classes.table}>
-        {/* <thead>
-            <tr>
-                {Object.keys(data[0] || {}).map((key, index) => (
-                    <th scope="col" key={`${key}+${index}`}>{key}</th>
-                ))}
-            </tr>
-        </thead> */}
         <thead>
             <tr>
                 {Object.entries(data[0]['labels']).map(([key, value], index) => (

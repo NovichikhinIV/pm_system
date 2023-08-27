@@ -93,7 +93,7 @@ const Registration = () => {
         </div>
 
           <div className="form__buttons">
-              <input disabled={!isValid} type="submit" value="Зарегестрироваться" className={["button", "blueButton"].join(' ')}/>
+              <input disabled={!isValid} type="submit" value="Зарегистрироваться" className={["button", "blueButton"].join(' ')}/>
           </div>
         </form>
 

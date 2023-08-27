@@ -6,7 +6,7 @@ import { useFetching } from '../../hooks/useFetching';
 import {useForm} from 'react-hook-form'
 import AuthContext from '../../context/AuthContext'
 
-const ItProjectId = () => {
+const SubtaskId = () => {
   const params = useParams()
   const navigate = useNavigate();
   let {authTokens} = useContext(AuthContext)
@@ -222,4 +222,4 @@ const ItProjectId = () => {
   )
 }
 
-export default ItProjectId
+export default SubtaskId
