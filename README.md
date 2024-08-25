@@ -13,7 +13,7 @@ reports - отчеты по проектам
 
 перед запуском надо добавить .env файл в ./main/main, ./auth/auth, ./reports/reports 
 
-и дописать SECRET_KEY
+и дописать разные SECRET_KEY в эти файлы
 
 
 1. файл .env в ./main/main:
